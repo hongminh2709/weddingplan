@@ -4,4 +4,4 @@
 
 Có thể chạy `bash build.sh` ở máy để tạo bản triển khai và dùng một máy chủ HTTP tĩnh để xem thư mục `dist` (ví dụ `python3 -m http.server --directory dist`). Trang gốc sẽ chuyển đến thiệp cưới.
 
-Sổ lưu bút sử dụng dự án Supabase được cấu hình trong `local/guestbook.js`; cần dự án đó hoạt động và thiết lập bảng, chính sách truy cập theo `supabase/guestbook.sql` để nhận lời chúc. Nhạc và một số dịch vụ bên ngoài vẫn cần kết nối mạng.
+Sổ lưu bút hiện không khả dụng vì dự án không còn cấu hình khóa API Supabase. Nhạc và một số dịch vụ bên ngoài vẫn cần kết nối mạng.

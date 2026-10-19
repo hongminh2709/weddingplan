@@ -23,5 +23,8 @@ assert.equal(typeof createGuestbookFetch, 'function', 'guestbook adapter is avai
   assert.equal(invalid.status, 400);
   const suggestions = await (await fetch('https://api.chungdoi.com/api/invite/hongminh-khanhlinh/ai-wishes', { method:'POST' })).json();
   assert.equal(suggestions.wishes.length, 5);
+  const unconfigured = createGuestbookFetch(fetchStub, {});
+  assert.equal((await unconfigured(endpoint)).status, 503);
+  assert.equal((await unconfigured(endpoint, {method:'POST',body:JSON.stringify({name:'An',message:'Hi'})})).status, 503);
   console.log('Guestbook checks passed');
 })().catch(e => { console.error(e); process.exitCode = 1; });
