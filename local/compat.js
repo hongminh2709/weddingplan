@@ -1,12 +1,15 @@
 (function (root) {
   'use strict';
 
-  function mapEmbedUrl(value) {
+  function mapEmbedUrl(value, fallbackAddress) {
     var url;
     try { url = new URL(value); } catch (_) { return null; }
     if (url.hostname !== 'www.google.com' || url.pathname !== '/maps/embed/v1/place') return null;
     var query = url.searchParams.get('q');
     if (!query) return null;
+    if (query.indexOf('place_id:') === 0) {
+      query = url.searchParams.get('center') || fallbackAddress || query;
+    }
     var embed = new URL('https://maps.google.com/maps');
     embed.searchParams.set('q', query);
     embed.searchParams.set('output', 'embed');
@@ -24,6 +27,8 @@
     module.exports = { mapEmbedUrl: mapEmbedUrl, trackForUrl: trackForUrl };
     return;
   }
+
+  root.weddingCompat = { mapEmbedUrl: mapEmbedUrl };
 
   var originalFetch = root.fetch;
   root.fetch = function (input, options) {
