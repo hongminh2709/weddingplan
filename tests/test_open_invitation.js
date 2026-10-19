@@ -2,33 +2,45 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const closedPage = fs.readFileSync('chungdoi.com/i/hongminh-khanhlinh.html', 'utf8');
-const openPage = fs.readFileSync('chungdoi.com/i/hongminh-khanhlinhbaf7.html', 'utf8');
-assert.match(closedPage, /href="hongminh-khanhlinhbaf7\.html"[^>]*rel="nofollow"/);
-assert.match(openPage, /initialEnvelopeOpen\\":true/);
+// Exercise the saved renderer's actual envelope hook, including its mount effects.
+const code = fs.readFileSync('chungdoi.com/_next/static/chunks/2065-d547b56d1a80cad3.js', 'utf8');
+const start = code.indexOf('function(e){let{enabled:t,initialOpened:s=!1}');
+const end = code.indexOf('({enabled:!0,initialOpened:c||A})', start);
+assert.ok(start >= 0 && end > start);
+const source = '(' + code.slice(start, end) + ')';
 
-const chunks = [];
-const coverCode = fs.readFileSync('chungdoi.com/_next/static/chunks/12374-b1a7b7e1dcc97ae1.js', 'utf8');
-const linkStart = coverCode.indexOf('href:V??(0,_._L)("")');
-assert.notEqual(linkStart, -1);
-assert.doesNotMatch(coverCode.slice(linkStart, coverCode.indexOf(',onKeyDown:', linkStart)), /preventDefault/);
-vm.runInNewContext(coverCode, { self: { webpackChunk_N_E: chunks }, URLSearchParams });
-const linkExports = {};
-const requireModule = {};
-requireModule.d = (target, definitions) => Object.entries(definitions).forEach(([key, getter]) => Object.defineProperty(target, key, { get: getter }));
-chunks[0][1][83955](null, linkExports, requireModule);
-assert.equal(linkExports._L(''), 'hongminh-khanhlinhbaf7.html');
-assert.equal(linkExports._L('open=1&guest=An'), 'hongminh-khanhlinhbaf7.html?guest=An');
-
-assert.match(closedPage, /<script src="\/local\/open-invitation\.js"><\/script>/);
-const redirect = fs.readFileSync('local/open-invitation.js', 'utf8');
-function runRedirect(url) {
-  let destination;
-  const location = new URL(url);
-  location.replace = value => { destination = value; };
-  vm.runInNewContext(redirect, { window: { location }, URL, URLSearchParams });
-  return destination;
+function renderEnvelope(search) {
+  const states = [];
+  let index = 0;
+  let effects = [];
+  const react = {
+    useState(initial) {
+      const slot = index++;
+      if (!(slot in states)) states[slot] = typeof initial === 'function' ? initial() : initial;
+      return [states[slot], value => { states[slot] = value; }];
+    },
+    useRef(value) { return { current: value }; },
+    useEffect(effect) { effects.push(effect); },
+    useLayoutEffect() {},
+    useCallback(fn) { return fn; },
+  };
+  const context = { r: react, URLSearchParams, window: { location: { search } }, document: {}, history: {}, setTimeout, clearTimeout };
+  const hook = vm.runInNewContext(source, context);
+  function render() { index = 0; effects = []; return hook({ enabled: true }); }
+  let result = render();
+  effects.forEach(effect => effect());
+  result = render();
+  return result.envelopeOpened;
 }
-assert.equal(runRedirect('https://example.test/chungdoi.com/i/hongminh-khanhlinh.html?open=1&guest=An#map'), '/chungdoi.com/i/hongminh-khanhlinhbaf7.html?guest=An#map');
-assert.equal(runRedirect('https://example.test/chungdoi.com/i/hongminh-khanhlinh.html?guest=An'), undefined);
-console.log('Invitation opening checks passed');
+
+assert.equal(renderEnvelope(''), false);
+assert.equal(renderEnvelope('?guest=An&open=1'), true);
+assert.equal(renderEnvelope('?guest=An&open=0'), false);
+
+const invitation = require('../local/personalized-invitation.js');
+const fallback = new URL(invitation.openFallbackUrl('https://example.com/invite?guest=An&scroll=20#section'));
+assert.equal(fallback.searchParams.get('guest'), 'An');
+assert.equal(fallback.searchParams.get('scroll'), '20');
+assert.equal(fallback.searchParams.get('open'), '1');
+assert.equal(fallback.hash, '#section');
+console.log('Envelope opening checks passed');

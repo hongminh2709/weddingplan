@@ -12,7 +12,8 @@ class NetlifyBuildTest(unittest.TestCase):
         self.assertNotIn('Index of locally available sites', page)
         self.assertRegex(page, r'(?i)<meta\s+http-equiv="refresh"\s+content="0;\s*url=/chungdoi\.com/i/hongminh-khanhlinh\.html"')
         config = Path('netlify.toml').read_text()
-        self.assertRegex(config, r'(?s)\[\[redirects\]\].*?from\s*=\s*"/".*?to\s*=\s*"/chungdoi\.com/i/hongminh-khanhlinh\.html".*?status\s*=\s*302.*?force\s*=\s*true')
+        self.assertNotIn('[[redirects]]', config)
+        self.assertIn('[functions.invitation]', config)
 
     def test_build_contains_site_and_assets_without_private_mirror_files(self):
         with tempfile.TemporaryDirectory() as directory:

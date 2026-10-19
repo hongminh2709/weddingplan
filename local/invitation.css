@@ -48,3 +48,6 @@ a.wedding-directions:focus-visible {
   outline: 3px solid #d9a55f;
   outline-offset: 3px;
 }
+
+/* Personalized envelope text. */
+p[data-invite-guest]::after { content: " " attr(data-invite-guest); }
