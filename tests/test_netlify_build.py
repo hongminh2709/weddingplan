@@ -1,6 +1,7 @@
 import subprocess
 import tempfile
 import unittest
+import re
 from pathlib import Path
 
 
@@ -24,12 +25,15 @@ class NetlifyBuildTest(unittest.TestCase):
                 'fonts/ViaodaLibre-Regular.ttf',
                 'images/themes/minimalism-dark-red/flower2-decoration.webp',
                 'local/guestbook.js',
-                'cdn.chungdoi.com/uploads/fd5cd203-8da7-4ea6-8f76-fd2389d3a7f5.jpg',
+                'photos/fd5cd203-8da7-4ea6-8f76-fd2389d3a7f5.jpg',
                 'manifest.json',
             ):
                 self.assertTrue((output / path).is_file(), path)
             for path in ('cookies.txt', 'hts-cache', 'hts-log.txt', 'tests', 'supabase'):
                 self.assertFalse((output / path).exists(), path)
+            for page in (output / 'chungdoi.com/i').glob('hongminh-khanhlinh*.html'):
+                for photo in set(re.findall(r'/photos/[\w-]+\.jpg', page.read_text())):
+                    self.assertTrue((output / photo.lstrip('/')).is_file(), photo)
 
 
 if __name__ == '__main__':

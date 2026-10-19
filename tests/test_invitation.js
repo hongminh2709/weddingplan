@@ -34,4 +34,18 @@ assert.equal(new URL(frame.props.src).searchParams.get('q'), 'Nhà văn hoá');
 const scrollCode = fs.readFileSync('chungdoi.com/_next/static/chunks/2065-d547b56d1a80cad3.js', 'utf8');
 assert.match(scrollCode, /if\(!e\)return 25;let t=parseInt\(e,10\);return isNaN\(t\)\|\|t<=0\?25:t/);
 assert.match(mapCode, /className:"wedding-directions /);
+
+// The saved layout should not mount the language prompt or support chat.
+const layoutChunks = [];
+const layoutCode = fs.readFileSync('chungdoi.com/_next/static/chunks/app/layout-bdf91ef526e3f491.js', 'utf8');
+vm.runInNewContext(layoutCode, { self: { webpackChunk_N_E: layoutChunks } });
+function layoutRequire() { return {}; }
+layoutRequire.d = requireModule.d;
+layoutRequire.n = value => value;
+const language = {};
+layoutChunks[0][1][38893](null, language, layoutRequire);
+assert.equal(language.LocaleSuggestionBanner(), null);
+const chat = {};
+layoutChunks[0][1][96995](null, chat, layoutRequire);
+assert.equal(chat.default(), null);
 console.log('Invitation map and scroll checks passed');
