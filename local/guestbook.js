@@ -17,7 +17,7 @@
     return new Response(JSON.stringify(body), { status: status || 200, headers: { 'Content-Type': 'application/json' } });
   }
 
-  function createGuestbookFetch(next, config) {
+  function createGuestbookFetch(next) {
     return async function (input, options) {
       var url = typeof input === 'string' ? input : input && input.url;
       var method = ((options && options.method) || (input && input.method) || 'GET').toUpperCase();
@@ -27,14 +27,8 @@
       if (url !== endpoint + 'comments' || (method !== 'GET' && method !== 'POST')) {
         return next.apply(this, arguments);
       }
-      if (!config.url || !config.key) {
-        return jsonResponse({ error: 'Sổ lưu bút hiện không khả dụng' }, 503);
-      }
-      var headers = { apikey: config.key };
       if (method === 'GET') {
-        var response = await next(config.url + '/rest/v1/guestbook?select=id,name,message,timestamp&order=timestamp.desc&limit=100', { headers: headers });
-        if (!response.ok) return response;
-        return jsonResponse({ comments: await response.json() });
+        return next('/.netlify/functions/guestbook');
       }
       var body;
       try { body = JSON.parse(options.body); } catch (_) { return jsonResponse({ error: 'Dữ liệu không hợp lệ' }, 400); }
@@ -43,11 +37,7 @@
       if (!name || !message || Array.from(name).length > 100 || Array.from(message).length > 2000) {
         return jsonResponse({ error: 'Tên hoặc lời chúc không hợp lệ' }, 400);
       }
-      headers['Content-Type'] = 'application/json';
-      headers.Prefer = 'return=minimal';
-      var result = await next(config.url + '/rest/v1/guestbook', { method: 'POST', headers: headers, body: JSON.stringify({ name: name, message: message }) });
-      if (!result.ok) return result;
-      return jsonResponse({ stored: true });
+      return next('/.netlify/functions/guestbook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name, message: message }) });
     };
   }
 
@@ -55,5 +45,5 @@
     module.exports = { createGuestbookFetch: createGuestbookFetch };
     return;
   }
-  root.fetch = createGuestbookFetch(root.fetch.bind(root), {});
+  root.fetch = createGuestbookFetch(root.fetch.bind(root));
 })(typeof window === 'undefined' ? globalThis : window);

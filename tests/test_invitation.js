@@ -7,7 +7,7 @@ const compat = require('../local/compat.js');
 // original application does, and inspect the URL before an iframe is created.
 const chunks = [];
 const mapCode = fs.readFileSync('chungdoi.com/_next/static/chunks/71675-67fb0a51dac882ce.js', 'utf8');
-vm.runInNewContext(mapCode, { self: { webpackChunk_N_E: chunks }, window: { weddingCompat: compat } });
+vm.runInNewContext(mapCode, { self: { webpackChunk_N_E: chunks }, window: { weddingCompat: compat }, URL });
 const mapExports = {};
 const modules = {
   95155: { jsx: (type, props) => ({ type, props }) },
@@ -19,6 +19,12 @@ const modules = {
 function requireModule(id) { return modules[id]; }
 requireModule.d = (target, definitions) => Object.entries(definitions).forEach(([key, getter]) => Object.defineProperty(target, key, { get: getter }));
 chunks[0][1][1825](null, mapExports, requireModule);
+const mapUtilities = {};
+chunks[0][1][80497](null, mapUtilities, requireModule);
+const generatedUrl = new URL(mapUtilities.MG({ address: 'Nhà văn hoá' }));
+assert.equal(generatedUrl.hostname, 'maps.google.com');
+assert.equal(generatedUrl.searchParams.get('q'), 'Nhà văn hoá');
+assert.equal(generatedUrl.searchParams.has('key'), false);
 const frame = mapExports.$({ address: 'Nhà văn hoá' });
 assert.equal(frame.type, 'iframe');
 assert.equal(new URL(frame.props.src).hostname, 'maps.google.com');
